@@ -1,46 +1,272 @@
 package com.example.surajnath.taproute;
 
-import android.support.v4.app.FragmentActivity;
+import android.app.ProgressDialog;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.support.annotation.NonNull;
+import android.support.design.widget.Snackbar;
+import android.support.v7.app.AlertDialog;
+import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.TextUtils;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.Button;
+import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 
-import com.google.android.gms.maps.CameraUpdateFactory;
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.MarkerOptions;
+import com.example.surajnath.taproute.Model.User;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.rengwuxian.materialedittext.MaterialEditText;
 
-public class Tab_main extends FragmentActivity implements OnMapReadyCallback {
+import dmax.dialog.SpotsDialog;
 
-    private GoogleMap mMap;
+public class Tab_main extends AppCompatActivity {
+
+    Button btnSignin, btnsignup;
+
+    RelativeLayout rootlayout;
+
+   ProgressDialog progressDialog;
+
+    FirebaseAuth auth;
+    FirebaseDatabase database;
+    DatabaseReference users;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tab_main);
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
-    }
+
+        //init firebase
+        auth = FirebaseAuth.getInstance();
+        database = FirebaseDatabase.getInstance();
+        users = database.getReference("Users");
+
+        btnSignin = findViewById(R.id.btnSignin);
+        btnsignup = findViewById(R.id.btnSignup);
+        rootlayout = findViewById(R.id.rootLayout);
+
+        btnsignup.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showRegisterDialog();
+            }
 
 
-    /**
-     * Manipulates the map once available.
-     * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we just add a marker near Sydney, Australia.
-     * If Google Play services is not installed on the device, the user will be prompted to install
-     * it inside the SupportMapFragment. This method will only be triggered once the user has
-     * installed Google Play services and returned to the app.
-     */
+        });
+        
+        btnSignin.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showSigninDialog();
+            }
+        });
+
+        }
+
+    private void showSigninDialog() {
+
+        AlertDialog.Builder dialog = new AlertDialog.Builder(this);
+        dialog.setTitle("taproute User Signin");
+        dialog.setMessage("Please use Email to Signin");
+
+
+        LayoutInflater layoutInflater = LayoutInflater.from(this);
+        View signin_layout = layoutInflater.inflate(R.layout.layout_signin,null);
+
+        final MaterialEditText edtEmail = signin_layout.findViewById(R.id.edtEmails);
+        final MaterialEditText edtPassword = signin_layout.findViewById(R.id.edtPasswords);
+
+
+        dialog.setView(signin_layout);
+
+        dialog.setPositiveButton("SignIn", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                          btnSignin.setEnabled(false);
+
+                        if (TextUtils.isEmpty(edtEmail.getText().toString())) {
+
+                            Snackbar.make(rootlayout, "Please enter email address", Snackbar.LENGTH_SHORT)
+                                    .show();
+                            return;
+
+                        }
+
+
+                        if (TextUtils.isEmpty(edtPassword.getText().toString())) {
+                            Snackbar.make(rootlayout, "Please enter Password", Snackbar.LENGTH_SHORT)
+                                    .show();
+                            return;
+
+                        }
+
+
+                        if (edtPassword.getText().toString().length() < 6) {
+                            Snackbar.make(rootlayout, "Password must be more than 6 characters", Snackbar.LENGTH_SHORT)
+                                    .show();
+                            return;
+
+                        }
+                        progressDialog = new ProgressDialog(Tab_main.this);
+                        progressDialog.setTitle("Signing in .......");
+                        progressDialog.setMessage("Please wait....");
+                        progressDialog.show();
+                        //Login
+                        auth.signInWithEmailAndPassword(edtEmail.getText().toString(),edtPassword.getText().toString())
+                                .addOnSuccessListener(new OnSuccessListener<AuthResult>() {
+                                    @Override
+                                    public void onSuccess(AuthResult authResult) {
+                                        progressDialog.cancel();
+                                     startActivity(new Intent(Tab_main.this,UserLocation.class));
+                                     finish();
+                                    }
+                                })
+                        .addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                progressDialog.cancel();
+                           Snackbar.make(rootlayout,"Sign Failed "+e.getMessage(),Snackbar.LENGTH_SHORT).show();
+                           btnSignin.setEnabled(true);
+                            }
+                        });
+                    }
+                });
+
+    dialog.setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
     @Override
-    public void onMapReady(GoogleMap googleMap) {
-        mMap = googleMap;
-
-        // Add a marker in Sydney and move the camera
-        LatLng sydney = new LatLng(-34, 151);
-        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+    public void onClick(DialogInterface dialog, int which) {
+        dialog.dismiss();
     }
+});
+
+
+
+        dialog.show();
+
+
+    }
+
+    private void showRegisterDialog() {
+        AlertDialog.Builder dialog = new AlertDialog.Builder(this);
+        dialog.setTitle("taproute User Registeration");
+        dialog.setMessage("Please use Email to register");
+
+
+        LayoutInflater layoutInflater = LayoutInflater.from(this);
+        View register_layout = layoutInflater.inflate(R.layout.layout_register,null);
+
+        final MaterialEditText edtEmail = register_layout.findViewById(R.id.edtEmail);
+        final MaterialEditText edtPassword = register_layout.findViewById(R.id.edtPassword);
+        final MaterialEditText edtName = register_layout.findViewById(R.id.edtName);
+        final MaterialEditText edtPhone = register_layout.findViewById(R.id.edtPhone);
+
+        dialog.setView(register_layout);
+
+        dialog.setPositiveButton("REGISTER", new DialogInterface.OnClickListener() {
+
+
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+
+                if(TextUtils.isEmpty(edtEmail.getText().toString()))
+                {
+                    Snackbar.make(rootlayout,"Please enter email address",Snackbar.LENGTH_SHORT)
+                    .show();
+                    return;
+
+
+                }
+
+                if(TextUtils.isEmpty(edtName.getText().toString()))
+                {
+                    Snackbar.make(rootlayout,"Please enter Name",Snackbar.LENGTH_SHORT)
+                            .show();
+                    return;
+
+                }
+
+                if(TextUtils.isEmpty(edtPassword.getText().toString()))
+                {
+                    Snackbar.make(rootlayout,"Please enter Password",Snackbar.LENGTH_SHORT)
+                            .show();
+                    return;
+
+                }
+
+                if(TextUtils.isEmpty(edtPhone.getText().toString()))
+                {
+                    Snackbar.make(rootlayout,"Please enter Phone Number",Snackbar.LENGTH_SHORT)
+                            .show();
+                    return;
+
+                }
+
+                if(edtPassword.getText().toString().length()<6)
+                {
+                    Snackbar.make(rootlayout,"Password must be more than 6 characters",Snackbar.LENGTH_SHORT)
+                            .show();
+                    return;
+
+                }
+
+                //Register New User
+
+                auth.createUserWithEmailAndPassword(edtEmail.getText().toString(),edtPassword.getText().toString())
+                        .addOnSuccessListener(new OnSuccessListener<AuthResult>() {
+                            @Override
+                            public void onSuccess(AuthResult authResult) {
+                                  //save user to db
+                                   User user = new User();
+                                   user.setEmail(edtEmail.getText().toString());
+                                   user.setPassowrd(edtPassword.getText().toString());
+                                   user.setName(edtName.getText().toString());
+                                   user.setPhone(edtPhone.getText().toString());
+
+                                   //use Email to key
+                                users.child(FirebaseAuth.getInstance().getCurrentUser().getUid()).setValue(user)
+                                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                    @Override
+                                    public void onSuccess(Void aVoid) {
+
+                                        Snackbar.make(rootlayout, "Registration Completed", Snackbar.LENGTH_SHORT)
+                                                .show();
+
+
+                                    }
+                                })
+                                .addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception e) {
+                                        Snackbar.make(rootlayout, "Registration Failed", Snackbar.LENGTH_SHORT)
+                                                .show();
+                                    }
+                                });
+
+                            }
+                        });
+
+            }
+        });
+
+        dialog.setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                   dialog.dismiss();
+            }
+        });
+
+        dialog.show();
+
+    }
+    
+    
 }

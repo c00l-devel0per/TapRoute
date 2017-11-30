@@ -24,7 +24,7 @@ public class Tap_Splash extends AppCompatActivity {
         img1.setAnimation(tab_anim);
 
 
-        final Intent tabi_main = new Intent(Tap_Splash.this, Tap_main.class);
+        final Intent tabi_main = new Intent(Tap_Splash.this, Tab_main.class);
         Thread timer = new Thread() {
             public void run() {
                 try {

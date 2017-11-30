@@ -1,8 +1,42 @@
-<fragment xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:map="http://schemas.android.com/apk/res-auto"
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/map"
-    android:name="com.google.android.gms.maps.SupportMapFragment"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.example.surajnath.taproute.Tab_main" />
+    android:id="@+id/rootLayout"
+    tools:context="com.example.surajnath.taproute.Tab_main"
+    android:background="@drawable/bg">
+
+    <ImageView
+        android:id="@+id/logoimg"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:src="@drawable/logo"/>
+    <LinearLayout
+        android:layout_below="@+id/logoimg"
+        android:layout_centerHorizontal="true"
+        android:layout_width="300dp"
+        android:layout_height="wrap_content">
+    <Button
+        android:id="@+id/btnSignin"
+        android:layout_width="0dp"
+        android:background="@color/btnsignin"
+        android:layout_height="wrap_content"
+        android:text="Sign in"
+        android:layout_weight="1"/>
+        <Space
+            android:layout_width="10dp"
+            android:layout_height="wrap_content" />
+
+    <Button
+        android:id="@+id/btnSignup"
+        android:background="@drawable/brn_regback"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Sign up"
+        android:layout_weight="1"/>
+    </LinearLayout>
+
+
+</RelativeLayout>
